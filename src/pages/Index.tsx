@@ -1,24 +1,19 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Car, MapPin } from "lucide-react";
+import { Trophy, Car, BarChart3, MapPin } from "lucide-react";
 import { PredictionResults } from "@/components/PredictionResults";
 import { FeatureImportance } from "@/components/FeatureImportance";
 import { CircuitSelector } from "@/components/CircuitSelector";
 import { WeatherConditions } from "@/components/WeatherConditions";
-import { PodiumSelector } from "@/components/PodiumSelector";
 
 const Index = () => {
   const [selectedCircuit, setSelectedCircuit] = useState("monaco");
   const [predictions, setPredictions] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [customPodium, setCustomPodium] = useState({
-    first: "",
-    second: "",
-    third: ""
-  });
 
   const handlePredict = async () => {
     setLoading(true);
@@ -50,15 +45,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header with F1 Car Logo */}
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="relative">
-              <Car className="h-12 w-12 text-red-600 transform rotate-90" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold text-white">1</span>
-              </div>
-            </div>
+            <Car className="h-8 w-8 text-red-600" />
             <h1 className="text-4xl font-bold text-gray-900">F1 Race Winner Predictor</h1>
             <Trophy className="h-8 w-8 text-yellow-500" />
           </div>
@@ -119,14 +109,6 @@ const Index = () => {
               )}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Podium Selector */}
-        <div className="mb-8">
-          <PodiumSelector 
-            customPodium={customPodium}
-            onPodiumChange={setCustomPodium}
-          />
         </div>
 
         {/* Results */}
