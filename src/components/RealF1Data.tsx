@@ -1,0 +1,223 @@
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Trophy, RefreshCw } from "lucide-react";
+
+interface RaceResult {
+  position: number;
+  driver_id: string;
+  constructor_id: string;
+  points: number;
+  time_text?: string;
+  fastest_lap_time?: string;
+  status: string;
+  driver?: {
+    given_name: string;
+    family_name: string;
+    code: string;
+  };
+  constructor?: {
+    name: string;
+  };
+}
+
+const RealF1Data = () => {
+  const [raceResults, setRaceResults] = useState<RaceResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  const fetchF1Data = async () => {
+    setFetching(true);
+    try {
+      console.log('Calling F1 data fetch function...');
+      const { data, error } = await supabase.functions.invoke('fetch-f1-data', {
+        body: { season: '2024', round: 'last' }
+      });
+
+      if (error) {
+        console.error('Error calling function:', error);
+        throw error;
+      }
+
+      console.log('F1 data fetch response:', data);
+      setLastUpdated(new Date().toLocaleString());
+      await loadRaceResults();
+    } catch (error) {
+      console.error('Error fetching F1 data:', error);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const loadRaceResults = async () => {
+    setLoading(true);
+    try {
+      // Get the latest race results with driver and constructor info
+      const { data: results, error } = await supabase
+        .from('race_results')
+        .select(`
+          position,
+          driver_id,
+          constructor_id,
+          points,
+          time_text,
+          fastest_lap_time,
+          status,
+          drivers!inner(given_name, family_name, code),
+          constructors!inner(name)
+        `)
+        .order('position', { ascending: true })
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading race results:', error);
+        return;
+      }
+
+      const formattedResults = results.map(result => ({
+        ...result,
+        driver: Array.isArray(result.drivers) ? result.drivers[0] : result.drivers,
+        constructor: Array.isArray(result.constructors) ? result.constructors[0] : result.constructors
+      }));
+
+      setRaceResults(formattedResults);
+    } catch (error) {
+      console.error('Error loading race results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRaceResults();
+  }, []);
+
+  const getPositionBadge = (position: number) => {
+    if (position <= 3) {
+      const colors = ['bg-yellow-500', 'bg-gray-400', 'bg-amber-600'];
+      return <Badge className={`${colors[position - 1]} text-white`}>{position}</Badge>;
+    }
+    return <Badge variant="outline">{position}</Badge>;
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-red-600" />
+            Real F1 Race Results
+          </CardTitle>
+          <CardDescription>
+            Latest Formula 1 race results from Ergast API
+            {lastUpdated && (
+              <span className="block text-sm text-gray-500 mt-1">
+                Last updated: {lastUpdated}
+              </span>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 mb-4">
+            <Button 
+              onClick={fetchF1Data}
+              disabled={fetching}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {fetching ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Fetching Latest Data...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Fetch Latest F1 Data
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={loadRaceResults}
+              disabled={loading}
+              variant="outline"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Refresh Results'
+              )}
+            </Button>
+          </div>
+
+          {raceResults.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>Team</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {raceResults.map((result) => (
+                  <TableRow key={`${result.driver_id}-${result.position}`}>
+                    <TableCell>
+                      {getPositionBadge(result.position)}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {result.driver?.code || result.driver_id}
+                      <span className="block text-sm text-gray-500">
+                        {result.driver?.given_name} {result.driver?.family_name}
+                      </span>
+                    </TableCell>
+                    <TableCell>{result.constructor?.name || result.constructor_id}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {result.time_text || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={result.points > 0 ? "default" : "secondary"}>
+                        {result.points} pts
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={result.status === 'Finished' ? 'outline' : 'destructive'}>
+                        {result.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading race results...
+                </div>
+              ) : (
+                <div>
+                  <p>No race results available yet.</p>
+                  <p className="text-sm">Click "Fetch Latest F1 Data" to load real data from Ergast API.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default RealF1Data;

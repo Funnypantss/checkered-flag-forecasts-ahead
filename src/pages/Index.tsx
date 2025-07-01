@@ -1,14 +1,13 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Car, BarChart3, MapPin } from "lucide-react";
+import { Trophy, Car, BarChart3, MapPin, Database } from "lucide-react";
 import { PredictionResults } from "@/components/PredictionResults";
 import { FeatureImportance } from "@/components/FeatureImportance";
 import { CircuitSelector } from "@/components/CircuitSelector";
 import { WeatherConditions } from "@/components/WeatherConditions";
+import RealF1Data from "@/components/RealF1Data";
 
 const Index = () => {
   const [selectedCircuit, setSelectedCircuit] = useState("monaco");
@@ -176,92 +175,104 @@ const Index = () => {
             <Trophy className="h-8 w-8 text-yellow-500" />
           </div>
           <p className="text-lg text-gray-600">
-            Advanced machine learning model to predict Formula 1 race outcomes
+            Real Formula 1 data and advanced machine learning predictions
           </p>
         </div>
 
         {/* Main Content */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Circuit Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Circuit Selection
-              </CardTitle>
-              <CardDescription>Choose the circuit for prediction</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CircuitSelector 
-                selectedCircuit={selectedCircuit}
-                onCircuitChange={setSelectedCircuit}
-              />
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="real-data" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="real-data">Real F1 Data</TabsTrigger>
+            <TabsTrigger value="predictions">Predictions</TabsTrigger>
+            <TabsTrigger value="full-results">Full Results</TabsTrigger>
+            <TabsTrigger value="analysis">Feature Analysis</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="real-data">
+            <RealF1Data />
+          </TabsContent>
+          
+          <TabsContent value="predictions">
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+              {/* Circuit Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Circuit Selection
+                  </CardTitle>
+                  <CardDescription>Choose the circuit for prediction</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CircuitSelector 
+                    selectedCircuit={selectedCircuit}
+                    onCircuitChange={setSelectedCircuit}
+                  />
+                </CardContent>
+              </Card>
 
-          {/* Weather Conditions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Weather Conditions</CardTitle>
-              <CardDescription>Current forecast for race day</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <WeatherConditions circuit={selectedCircuit} />
-            </CardContent>
-          </Card>
+              {/* Weather Conditions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weather Conditions</CardTitle>
+                  <CardDescription>Current forecast for race day</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <WeatherConditions circuit={selectedCircuit} />
+                </CardContent>
+              </Card>
 
-          {/* Prediction Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Run Prediction</CardTitle>
-              <CardDescription>Generate race outcome predictions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handlePredict} 
-                disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700"
-                size="lg"
-              >
-                {loading ? "Predicting..." : "Predict Race Winner"}
-              </Button>
-              {predictions && (
-                <div className="mt-4 text-sm text-gray-600">
-                  Model Accuracy: {predictions.mae.toFixed(2)}s MAE
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              {/* Prediction Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Run Prediction</CardTitle>
+                  <CardDescription>Generate race outcome predictions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={handlePredict} 
+                    disabled={loading}
+                    className="w-full bg-red-600 hover:bg-red-700"
+                    size="lg"
+                  >
+                    {loading ? "Predicting..." : "Predict Race Winner"}
+                  </Button>
+                  {predictions && (
+                    <div className="mt-4 text-sm text-gray-600">
+                      Model Accuracy: {predictions.mae.toFixed(2)}s MAE
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Results */}
-        {predictions && (
-          <Tabs defaultValue="podium" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="podium">Podium Predictions</TabsTrigger>
-              <TabsTrigger value="full-results">Full Results</TabsTrigger>
-              <TabsTrigger value="analysis">Feature Analysis</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="podium">
+            {predictions && (
               <PredictionResults 
                 predictions={predictions}
                 type="podium"
               />
-            </TabsContent>
-            
-            <TabsContent value="full-results">
+            )}
+          </TabsContent>
+          
+          <TabsContent value="full-results">
+            {predictions ? (
               <PredictionResults 
                 predictions={predictions}
                 type="full"
               />
-            </TabsContent>
-            
-            <TabsContent value="analysis">
-              <FeatureImportance circuit={selectedCircuit} />
-            </TabsContent>
-          </Tabs>
-        )}
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">Run a prediction first to see full results</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="analysis">
+            <FeatureImportance circuit={selectedCircuit} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
