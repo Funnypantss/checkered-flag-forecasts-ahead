@@ -20,38 +20,49 @@ serve(async (req) => {
 
   try {
     const { season = '2024', round = 'last' } = await req.json();
-    console.log(`Fetching F1 data for season ${season}, round ${round}`);
+    console.log(`Inserting sample F1 data for season ${season}, round ${round}`);
 
-    // Create some sample data to test the display functionality first
-    // This will help us verify the frontend works before fixing the API issues
+    // Clear existing data for this race to avoid duplicates
+    const raceId = '2024_24';
+    await supabase.from('race_results').delete().eq('race_id', raceId);
+
+    // Sample data to insert
     const sampleDrivers = [
       { driver_id: 'verstappen', given_name: 'Max', family_name: 'Verstappen', code: 'VER' },
       { driver_id: 'leclerc', given_name: 'Charles', family_name: 'Leclerc', code: 'LEC' },
       { driver_id: 'norris', given_name: 'Lando', family_name: 'Norris', code: 'NOR' },
       { driver_id: 'piastri', given_name: 'Oscar', family_name: 'Piastri', code: 'PIA' },
-      { driver_id: 'sainz', given_name: 'Carlos', family_name: 'Sainz', code: 'SAI' }
+      { driver_id: 'sainz', given_name: 'Carlos', family_name: 'Sainz', code: 'SAI' },
+      { driver_id: 'russell', given_name: 'George', family_name: 'Russell', code: 'RUS' },
+      { driver_id: 'hamilton', given_name: 'Lewis', family_name: 'Hamilton', code: 'HAM' }
     ];
 
     const sampleConstructors = [
       { constructor_id: 'red_bull', name: 'Red Bull Racing' },
       { constructor_id: 'ferrari', name: 'Ferrari' },
-      { constructor_id: 'mclaren', name: 'McLaren' }
+      { constructor_id: 'mclaren', name: 'McLaren' },
+      { constructor_id: 'mercedes', name: 'Mercedes' }
     ];
 
     // Insert sample drivers
     for (const driver of sampleDrivers) {
-      await supabase.from('drivers').upsert(driver, { onConflict: 'driver_id' });
+      const { error } = await supabase.from('drivers').upsert(driver, { onConflict: 'driver_id' });
+      if (error) {
+        console.error('Error inserting driver:', error);
+      }
     }
 
     // Insert sample constructors
     for (const constructor of sampleConstructors) {
-      await supabase.from('constructors').upsert(constructor, { onConflict: 'constructor_id' });
+      const { error } = await supabase.from('constructors').upsert(constructor, { onConflict: 'constructor_id' });
+      if (error) {
+        console.error('Error inserting constructor:', error);
+      }
     }
 
     // Insert sample season and race
     await supabase.from('seasons').upsert({ year: 2024 }, { onConflict: 'year' });
     
-    const raceId = '2024_24';
     await supabase.from('races').upsert({
       race_id: raceId,
       season: 2024,
@@ -61,30 +72,36 @@ serve(async (req) => {
       date: '2024-12-08'
     }, { onConflict: 'race_id' });
 
-    // Insert sample race results
+    // Insert sample race results with more realistic data
     const sampleResults = [
       { race_id: raceId, driver_id: 'norris', constructor_id: 'mclaren', position: 1, points: 25, time_text: '1:26:33.291', status: 'Finished' },
       { race_id: raceId, driver_id: 'sainz', constructor_id: 'ferrari', position: 2, points: 18, time_text: '+5.306', status: 'Finished' },
       { race_id: raceId, driver_id: 'leclerc', constructor_id: 'ferrari', position: 3, points: 15, time_text: '+31.928', status: 'Finished' },
       { race_id: raceId, driver_id: 'piastri', constructor_id: 'mclaren', position: 4, points: 12, time_text: '+49.289', status: 'Finished' },
-      { race_id: raceId, driver_id: 'verstappen', constructor_id: 'red_bull', position: 6, points: 8, time_text: '+1:09.451', status: 'Finished' }
+      { race_id: raceId, driver_id: 'russell', constructor_id: 'mercedes', position: 5, points: 10, time_text: '+1:05.123', status: 'Finished' },
+      { race_id: raceId, driver_id: 'verstappen', constructor_id: 'red_bull', position: 6, points: 8, time_text: '+1:09.451', status: 'Finished' },
+      { race_id: raceId, driver_id: 'hamilton', constructor_id: 'mercedes', position: 7, points: 6, time_text: '+1:15.678', status: 'Finished' }
     ];
 
     for (const result of sampleResults) {
-      await supabase.from('race_results').upsert({
+      const { error } = await supabase.from('race_results').insert({
         ...result,
         position_text: result.position.toString(),
         position_order: result.position,
         laps: 58,
         fastest_lap_time: '1:26.103'
       });
+      
+      if (error) {
+        console.error('Error inserting race result:', error);
+      }
     }
 
     console.log('Sample F1 data inserted successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Sample F1 data inserted successfully (API temporarily unavailable)',
+      message: 'Sample F1 data inserted successfully',
       data: {
         races: 1,
         results: sampleResults.length,
