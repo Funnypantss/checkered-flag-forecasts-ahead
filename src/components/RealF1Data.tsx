@@ -46,6 +46,7 @@ const RealF1Data = () => {
 
       console.log('F1 data fetch response:', data);
       setLastUpdated(new Date().toLocaleString());
+      // Automatically load race results after fetching new data
       await loadRaceResults();
     } catch (error) {
       console.error('Error fetching F1 data:', error);
@@ -57,6 +58,8 @@ const RealF1Data = () => {
   const loadRaceResults = async () => {
     setLoading(true);
     try {
+      console.log('Loading race results...');
+      
       // Get the latest race results with driver and constructor info
       const { data: results, error } = await supabase
         .from('race_results')
@@ -68,23 +71,39 @@ const RealF1Data = () => {
           time_text,
           fastest_lap_time,
           status,
-          drivers!inner(given_name, family_name, code),
-          constructors!inner(name)
+          drivers(given_name, family_name, code),
+          constructors(name)
         `)
         .order('position', { ascending: true })
-        .limit(10);
+        .limit(20);
 
       if (error) {
         console.error('Error loading race results:', error);
         return;
       }
 
+      console.log('Raw race results data:', results);
+
+      if (!results || results.length === 0) {
+        console.log('No race results found');
+        setRaceResults([]);
+        return;
+      }
+
+      // Transform the data to match our interface
       const formattedResults = results.map(result => ({
-        ...result,
-        driver: Array.isArray(result.drivers) ? result.drivers[0] : result.drivers,
-        constructor: Array.isArray(result.constructors) ? result.constructors[0] : result.constructors
+        position: result.position,
+        driver_id: result.driver_id,
+        constructor_id: result.constructor_id,
+        points: result.points,
+        time_text: result.time_text,
+        fastest_lap_time: result.fastest_lap_time,
+        status: result.status,
+        driver: result.drivers,
+        constructor: result.constructors
       }));
 
+      console.log('Formatted race results:', formattedResults);
       setRaceResults(formattedResults);
     } catch (error) {
       console.error('Error loading race results:', error);
@@ -170,8 +189,8 @@ const RealF1Data = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {raceResults.map((result) => (
-                  <TableRow key={`${result.driver_id}-${result.position}`}>
+                {raceResults.map((result, index) => (
+                  <TableRow key={`${result.driver_id}-${result.position}-${index}`}>
                     <TableCell>
                       {getPositionBadge(result.position)}
                     </TableCell>
