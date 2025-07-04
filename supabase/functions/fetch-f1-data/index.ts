@@ -4,9 +4,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 
 const SUPABASE_URL = "https://hlqfroimdnzjexkiwvpc.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhscWZyb2ltZG56amV4a2l3dnBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NjI4MjcsImV4cCI6MjA2NjQzODgyN30.ozlnk2SV8JvfOr4zWehhb3rzM5QKZICOAXtwSmN3YSY";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +28,10 @@ serve(async (req) => {
 
     // Clear existing data for this race to avoid duplicates
     const raceId = '2024_24';
-    await supabase.from('race_results').delete().eq('race_id', raceId);
+    const { error: deleteError } = await supabase.from('race_results').delete().eq('race_id', raceId);
+    if (deleteError) {
+      console.error('Error deleting existing race results:', deleteError);
+    }
 
     // Sample data to insert
     const sampleDrivers = [
@@ -61,9 +68,12 @@ serve(async (req) => {
     }
 
     // Insert sample season and race
-    await supabase.from('seasons').upsert({ year: 2024 }, { onConflict: 'year' });
+    const { error: seasonError } = await supabase.from('seasons').upsert({ year: 2024 }, { onConflict: 'year' });
+    if (seasonError) {
+      console.error('Error inserting season:', seasonError);
+    }
     
-    await supabase.from('races').upsert({
+    const { error: raceError } = await supabase.from('races').upsert({
       race_id: raceId,
       season: 2024,
       round: 24,
@@ -71,6 +81,10 @@ serve(async (req) => {
       circuit_id: 'yas_marina',
       date: '2024-12-08'
     }, { onConflict: 'race_id' });
+    
+    if (raceError) {
+      console.error('Error inserting race:', raceError);
+    }
 
     // Insert sample race results with more realistic data
     const sampleResults = [
