@@ -22,138 +22,83 @@ serve(async (req) => {
     const { season = '2024', round = 'last' } = await req.json();
     console.log(`Fetching F1 data for season ${season}, round ${round}`);
 
-    // Fetch current season race calendar
-    const calendarResponse = await fetch(`https://ergast.com/api/f1/${season}.json`);
-    const calendarData = await calendarResponse.json();
-    
-    // Fetch latest race results
-    const resultsResponse = await fetch(`https://ergast.com/api/f1/${season}/${round}/results.json`);
-    const resultsData = await resultsResponse.json();
-    
-    // Fetch driver standings
-    const standingsResponse = await fetch(`https://ergast.com/api/f1/${season}/driverStandings.json`);
-    const standingsData = await standingsResponse.json();
-    
-    // Fetch constructor standings
-    const constructorStandingsResponse = await fetch(`https://ergast.com/api/f1/${season}/constructorStandings.json`);
-    const constructorStandingsData = await constructorStandingsResponse.json();
+    // Create some sample data to test the display functionality first
+    // This will help us verify the frontend works before fixing the API issues
+    const sampleDrivers = [
+      { driver_id: 'verstappen', given_name: 'Max', family_name: 'Verstappen', code: 'VER' },
+      { driver_id: 'leclerc', given_name: 'Charles', family_name: 'Leclerc', code: 'LEC' },
+      { driver_id: 'norris', given_name: 'Lando', family_name: 'Norris', code: 'NOR' },
+      { driver_id: 'piastri', given_name: 'Oscar', family_name: 'Piastri', code: 'PIA' },
+      { driver_id: 'sainz', given_name: 'Carlos', family_name: 'Sainz', code: 'SAI' }
+    ];
 
-    // Process and store data in Supabase
-    const races = calendarData.MRData?.RaceTable?.Races || [];
-    const raceResults = resultsData.MRData?.RaceTable?.Races?.[0]?.Results || [];
-    const driverStandings = standingsData.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
-    const constructorStandings = constructorStandingsData.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || [];
+    const sampleConstructors = [
+      { constructor_id: 'red_bull', name: 'Red Bull Racing' },
+      { constructor_id: 'ferrari', name: 'Ferrari' },
+      { constructor_id: 'mclaren', name: 'McLaren' }
+    ];
 
-    // Insert circuits if they don't exist
-    for (const race of races) {
-      const circuit = race.Circuit;
-      await supabase.from('circuits').upsert({
-        circuit_id: circuit.circuitId,
-        name: circuit.circuitName,
-        location: circuit.Location?.locality,
-        country: circuit.Location?.country,
-        lat: parseFloat(circuit.Location?.lat || '0'),
-        lng: parseFloat(circuit.Location?.long || '0'),
-        alt: parseInt(circuit.Location?.alt || '0'),
-        url: circuit.url
-      }, { onConflict: 'circuit_id' });
+    // Insert sample drivers
+    for (const driver of sampleDrivers) {
+      await supabase.from('drivers').upsert(driver, { onConflict: 'driver_id' });
     }
 
-    // Insert constructors
-    const constructors = new Set();
-    [...raceResults, ...constructorStandings].forEach(item => {
-      const constructor = item.Constructor || item.Constructors?.[0];
-      if (constructor && !constructors.has(constructor.constructorId)) {
-        constructors.add(constructor.constructorId);
-        supabase.from('constructors').upsert({
-          constructor_id: constructor.constructorId,
-          name: constructor.name,
-          nationality: constructor.nationality,
-          url: constructor.url
-        }, { onConflict: 'constructor_id' });
-      }
-    });
-
-    // Insert drivers
-    const drivers = new Set();
-    [...raceResults, ...driverStandings].forEach(item => {
-      const driver = item.Driver;
-      if (driver && !drivers.has(driver.driverId)) {
-        drivers.add(driver.driverId);
-        supabase.from('drivers').upsert({
-          driver_id: driver.driverId,
-          driver_number: parseInt(driver.permanentNumber || '0'),
-          code: driver.code,
-          given_name: driver.givenName,
-          family_name: driver.familyName,
-          date_of_birth: driver.dateOfBirth,
-          nationality: driver.nationality,
-          url: driver.url
-        }, { onConflict: 'driver_id' });
-      }
-    });
-
-    // Insert season
-    await supabase.from('seasons').upsert({
-      year: parseInt(season)
-    }, { onConflict: 'year' });
-
-    // Insert races
-    for (const race of races) {
-      await supabase.from('races').upsert({
-        season: parseInt(season),
-        round: parseInt(race.round),
-        race_id: `${season}_${race.round}`,
-        race_name: race.raceName,
-        circuit_id: race.Circuit.circuitId,
-        date: race.date,
-        time: race.time,
-        url: race.url
-      }, { onConflict: 'race_id' });
+    // Insert sample constructors
+    for (const constructor of sampleConstructors) {
+      await supabase.from('constructors').upsert(constructor, { onConflict: 'constructor_id' });
     }
 
-    // Insert race results if available
-    if (raceResults.length > 0) {
-      const raceId = `${season}_${resultsData.MRData.RaceTable.Races[0].round}`;
-      
-      for (const result of raceResults) {
-        await supabase.from('race_results').upsert({
-          race_id: raceId,
-          driver_id: result.Driver.driverId,
-          constructor_id: result.Constructor.constructorId,
-          position: parseInt(result.position),
-          position_text: result.positionText,
-          position_order: parseInt(result.position),
-          points: parseFloat(result.points),
-          laps: parseInt(result.laps || '0'),
-          time_text: result.Time?.time,
-          milliseconds: result.Time?.millis ? parseInt(result.Time.millis) : null,
-          fastest_lap: result.FastestLap ? parseInt(result.FastestLap.lap) : null,
-          fastest_lap_rank: result.FastestLap ? parseInt(result.FastestLap.rank) : null,
-          fastest_lap_time: result.FastestLap?.Time?.time,
-          fastest_lap_speed: result.FastestLap?.AverageSpeed ? parseFloat(result.FastestLap.AverageSpeed.speed) : null,
-          status: result.status
-        });
-      }
+    // Insert sample season and race
+    await supabase.from('seasons').upsert({ year: 2024 }, { onConflict: 'year' });
+    
+    const raceId = '2024_24';
+    await supabase.from('races').upsert({
+      race_id: raceId,
+      season: 2024,
+      round: 24,
+      race_name: 'Abu Dhabi Grand Prix',
+      circuit_id: 'yas_marina',
+      date: '2024-12-08'
+    }, { onConflict: 'race_id' });
+
+    // Insert sample race results
+    const sampleResults = [
+      { race_id: raceId, driver_id: 'norris', constructor_id: 'mclaren', position: 1, points: 25, time_text: '1:26:33.291', status: 'Finished' },
+      { race_id: raceId, driver_id: 'sainz', constructor_id: 'ferrari', position: 2, points: 18, time_text: '+5.306', status: 'Finished' },
+      { race_id: raceId, driver_id: 'leclerc', constructor_id: 'ferrari', position: 3, points: 15, time_text: '+31.928', status: 'Finished' },
+      { race_id: raceId, driver_id: 'piastri', constructor_id: 'mclaren', position: 4, points: 12, time_text: '+49.289', status: 'Finished' },
+      { race_id: raceId, driver_id: 'verstappen', constructor_id: 'red_bull', position: 6, points: 8, time_text: '+1:09.451', status: 'Finished' }
+    ];
+
+    for (const result of sampleResults) {
+      await supabase.from('race_results').upsert({
+        ...result,
+        position_text: result.position.toString(),
+        position_order: result.position,
+        laps: 58,
+        fastest_lap_time: '1:26.103'
+      });
     }
+
+    console.log('Sample F1 data inserted successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'F1 data fetched and stored successfully',
+      message: 'Sample F1 data inserted successfully (API temporarily unavailable)',
       data: {
-        races: races.length,
-        results: raceResults.length,
-        drivers: drivers.size,
-        constructors: constructors.size
+        races: 1,
+        results: sampleResults.length,
+        drivers: sampleDrivers.length,
+        constructors: sampleConstructors.length
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error fetching F1 data:', error);
+    console.error('Error in F1 data function:', error);
     return new Response(JSON.stringify({ 
-      error: 'Failed to fetch F1 data',
+      error: 'Failed to process F1 data',
       details: error.message 
     }), {
       status: 500,

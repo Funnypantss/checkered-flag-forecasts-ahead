@@ -30,9 +30,11 @@ const RealF1Data = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchF1Data = async () => {
     setFetching(true);
+    setError(null);
     try {
       console.log('Calling F1 data fetch function...');
       const { data, error } = await supabase.functions.invoke('fetch-f1-data', {
@@ -41,7 +43,8 @@ const RealF1Data = () => {
 
       if (error) {
         console.error('Error calling function:', error);
-        throw error;
+        setError('Failed to fetch F1 data. Please try again.');
+        return;
       }
 
       console.log('F1 data fetch response:', data);
@@ -50,6 +53,7 @@ const RealF1Data = () => {
       await loadRaceResults();
     } catch (error) {
       console.error('Error fetching F1 data:', error);
+      setError('Failed to fetch F1 data. Please try again.');
     } finally {
       setFetching(false);
     }
@@ -57,6 +61,7 @@ const RealF1Data = () => {
 
   const loadRaceResults = async () => {
     setLoading(true);
+    setError(null);
     try {
       console.log('Loading race results...');
       
@@ -79,6 +84,7 @@ const RealF1Data = () => {
 
       if (error) {
         console.error('Error loading race results:', error);
+        setError('Failed to load race results. Please try fetching data first.');
         return;
       }
 
@@ -87,6 +93,7 @@ const RealF1Data = () => {
       if (!results || results.length === 0) {
         console.log('No race results found');
         setRaceResults([]);
+        setError('No race results found. Please fetch F1 data first.');
         return;
       }
 
@@ -105,8 +112,10 @@ const RealF1Data = () => {
 
       console.log('Formatted race results:', formattedResults);
       setRaceResults(formattedResults);
+      setError(null);
     } catch (error) {
       console.error('Error loading race results:', error);
+      setError('Failed to load race results. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -176,6 +185,12 @@ const RealF1Data = () => {
             </Button>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           {raceResults.length > 0 ? (
             <Table>
               <TableHeader>
@@ -228,7 +243,7 @@ const RealF1Data = () => {
               ) : (
                 <div>
                   <p>No race results available yet.</p>
-                  <p className="text-sm">Click "Fetch Latest F1 Data" to load real data from Ergast API.</p>
+                  <p className="text-sm">Click "Fetch Latest F1 Data" to load sample race data.</p>
                 </div>
               )}
             </div>
