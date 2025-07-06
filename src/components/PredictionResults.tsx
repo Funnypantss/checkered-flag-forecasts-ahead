@@ -26,7 +26,7 @@ interface PredictionResultsProps {
 export const PredictionResults = ({ predictions, type }: PredictionResultsProps) => {
   const getPositionIcon = (position: number) => {
     switch (position) {
-      case 1: return <Trophy className="h-8 w-8 championship-gold animate-pulse" />;
+      case 1: return <Trophy className="h-8 w-8 championship-gold" />;
       case 2: return <Medal className="h-8 w-8 metallic-silver" />;
       case 3: return <Award className="h-8 w-8 text-amber-600" />;
       default: return (
@@ -77,11 +77,11 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
         <CardTitle className="flex items-center justify-center gap-3 text-2xl">
           {type === "podium" ? (
             <>
-              <Trophy className="h-8 w-8 championship-gold animate-pulse" />
+              <Trophy className="h-8 w-8 championship-gold" />
               <span className="racing-gradient bg-clip-text text-transparent">
                 🏆 PODIUM PREDICTIONS 🏆
               </span>
-              <Trophy className="h-8 w-8 championship-gold animate-pulse" />
+              <Trophy className="h-8 w-8 championship-gold" />
             </>
           ) : (
             <>
@@ -100,9 +100,9 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
             <div 
               key={result.driver}
               className={cn(
-                "relative p-4 rounded-xl border-l-4 transition-all duration-300 hover:scale-[1.02] group",
+                "relative p-4 rounded-xl border-l-4 transition-all duration-300 hover:scale-[1.01] group",
                 result.position <= 3 
-                  ? "f1-card border-l-yellow-400 shadow-lg shadow-yellow-500/20" 
+                  ? "f1-card border-l-yellow-400 shadow-lg shadow-yellow-500/10" 
                   : "f1-card border-l-gray-600",
                 type === "podium" && "podium-card"
               )}
@@ -113,9 +113,6 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
                   {/* Position indicator */}
                   <div className="relative">
                     {getPositionIcon(result.position)}
-                    {result.position <= 3 && (
-                      <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-yellow-400/20 to-red-600/20 animate-ping" />
-                    )}
                   </div>
                   
                   {/* Driver info */}
@@ -123,7 +120,7 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
                     <F1Car 
                       team={getTeamCar(result.team) as any} 
                       size="md" 
-                      animated={result.position <= 3}
+                      animated={false}
                     />
                     <div>
                       <div className="font-bold text-xl text-white group-hover:racing-red transition-colors">
@@ -150,10 +147,9 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
                 </div>
               </div>
               
-              {/* Speed lines effect on hover */}
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Speed lines effect on hover - more subtle */}
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-60 transition-opacity">
                 <div className="speed-lines" />
-                <div className="speed-lines" style={{ animationDelay: '0.1s' }} />
               </div>
             </div>
           ))}
@@ -171,7 +167,7 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
                 <div className="relative h-20 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-lg mb-3 flex items-end justify-center pb-2">
                   <span className="text-2xl">🥈</span>
                   <div className="absolute -top-2 text-4xl">
-                    <F1Car team={getTeamCar(predictions.podium[1]?.team) as any} size="md" />
+                    <F1Car team={getTeamCar(predictions.podium[1]?.team) as any} size="md" animated={false} />
                   </div>
                 </div>
                 <div className="font-bold text-white">{predictions.podium[1]?.driver}</div>
@@ -180,10 +176,10 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
               
               {/* 1st Place */}
               <div className="order-2 lg:order-2">
-                <div className="relative h-28 bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-t-lg mb-3 flex items-end justify-center pb-2 animate-racing-pulse">
+                <div className="relative h-28 bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-t-lg mb-3 flex items-end justify-center pb-2 animate-gentle-glow">
                   <span className="text-3xl">🥇</span>
                   <div className="absolute -top-4 text-5xl">
-                    <F1Car team={getTeamCar(predictions.podium[0]?.team) as any} size="lg" />
+                    <F1Car team={getTeamCar(predictions.podium[0]?.team) as any} size="lg" animated={false} />
                   </div>
                 </div>
                 <div className="font-bold text-xl championship-gold">{predictions.podium[0]?.driver}</div>
@@ -195,7 +191,7 @@ export const PredictionResults = ({ predictions, type }: PredictionResultsProps)
                 <div className="relative h-16 bg-gradient-to-t from-amber-600 to-amber-500 rounded-t-lg mb-3 flex items-end justify-center pb-2">
                   <span className="text-xl">🥉</span>
                   <div className="absolute -top-2 text-3xl">
-                    <F1Car team={getTeamCar(predictions.podium[2]?.team) as any} size="sm" />
+                    <F1Car team={getTeamCar(predictions.podium[2]?.team) as any} size="sm" animated={false} />
                   </div>
                 </div>
                 <div className="font-bold text-white">{predictions.podium[2]?.driver}</div>
