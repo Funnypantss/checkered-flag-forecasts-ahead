@@ -51,11 +51,36 @@ serve(async (req) => {
       { constructor_id: 'mercedes', name: 'Mercedes' }
     ];
 
+    // Add circuit data
+    const sampleCircuits = [
+      { 
+        circuit_id: 'yas_marina', 
+        name: 'Yas Marina Circuit', 
+        location: 'Abu Dhabi', 
+        country: 'UAE',
+        lat: 24.4672,
+        lng: 54.6031,
+        alt: 3
+      }
+    ];
+
+    // Insert sample circuits first (required for races foreign key)
+    for (const circuit of sampleCircuits) {
+      const { error } = await supabase.from('circuits').upsert(circuit, { onConflict: 'circuit_id' });
+      if (error) {
+        console.error('Error inserting circuit:', error);
+      } else {
+        console.log('Circuit inserted successfully:', circuit.circuit_id);
+      }
+    }
+
     // Insert sample drivers
     for (const driver of sampleDrivers) {
       const { error } = await supabase.from('drivers').upsert(driver, { onConflict: 'driver_id' });
       if (error) {
         console.error('Error inserting driver:', error);
+      } else {
+        console.log('Driver inserted successfully:', driver.driver_id);
       }
     }
 
@@ -64,15 +89,20 @@ serve(async (req) => {
       const { error } = await supabase.from('constructors').upsert(constructor, { onConflict: 'constructor_id' });
       if (error) {
         console.error('Error inserting constructor:', error);
+      } else {
+        console.log('Constructor inserted successfully:', constructor.constructor_id);
       }
     }
 
-    // Insert sample season and race
+    // Insert sample season
     const { error: seasonError } = await supabase.from('seasons').upsert({ year: 2024 }, { onConflict: 'year' });
     if (seasonError) {
       console.error('Error inserting season:', seasonError);
+    } else {
+      console.log('Season inserted successfully: 2024');
     }
     
+    // Insert sample race
     const { error: raceError } = await supabase.from('races').upsert({
       race_id: raceId,
       season: 2024,
@@ -84,6 +114,8 @@ serve(async (req) => {
     
     if (raceError) {
       console.error('Error inserting race:', raceError);
+    } else {
+      console.log('Race inserted successfully:', raceId);
     }
 
     // Insert sample race results with more realistic data
@@ -97,6 +129,7 @@ serve(async (req) => {
       { race_id: raceId, driver_id: 'hamilton', constructor_id: 'mercedes', position: 7, points: 6, time_text: '+1:15.678', status: 'Finished' }
     ];
 
+    // Insert race results
     for (const result of sampleResults) {
       const { error } = await supabase.from('race_results').insert({
         ...result,
@@ -108,6 +141,8 @@ serve(async (req) => {
       
       if (error) {
         console.error('Error inserting race result:', error);
+      } else {
+        console.log('Race result inserted successfully for driver:', result.driver_id);
       }
     }
 
@@ -117,6 +152,7 @@ serve(async (req) => {
       success: true,
       message: 'Sample F1 data inserted successfully',
       data: {
+        circuits: sampleCircuits.length,
         races: 1,
         results: sampleResults.length,
         drivers: sampleDrivers.length,
