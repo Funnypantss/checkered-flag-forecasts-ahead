@@ -22,28 +22,40 @@ const circuits = [
 ];
 
 export const CircuitSelector = ({ selectedCircuit, onCircuitChange }: CircuitSelectorProps) => {
+  const selectedCircuitData = circuits.find(c => c.value === selectedCircuit) || circuits[0];
+
   return (
     <div className="space-y-4">
       <Select value={selectedCircuit} onValueChange={onCircuitChange}>
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select a circuit" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-gray-900 border-gray-700">
           {circuits.map((circuit) => (
-            <SelectItem key={circuit.value} value={circuit.value}>
+            <SelectItem 
+              key={circuit.value} 
+              value={circuit.value}
+              className="text-white hover:bg-gray-800 focus:bg-gray-800"
+            >
               <div className="flex flex-col">
                 <span className="font-medium">{circuit.name}</span>
-                <span className="text-sm text-gray-500">{circuit.country}</span>
+                <span className="text-sm text-gray-400">{circuit.country}</span>
               </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       
-      <div className="p-3 bg-gray-50 rounded-lg">
-        <h4 className="font-medium text-sm mb-2">Circuit Info</h4>
-        <div className="text-sm text-gray-600">
-          {circuits.find(c => c.value === selectedCircuit)?.name || "Monaco Grand Prix"}
+      <div className="p-4 glass-card rounded-lg border border-gray-700">
+        <h4 className="font-medium text-sm mb-3 racing-red">🏁 Selected Circuit</h4>
+        <div className="space-y-2">
+          <div className="text-white font-semibold">
+            {selectedCircuitData.name}
+          </div>
+          <div className="text-sm text-gray-400 flex items-center gap-2">
+            <span>📍</span>
+            {selectedCircuitData.country}
+          </div>
         </div>
       </div>
     </div>
