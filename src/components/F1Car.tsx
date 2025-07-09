@@ -25,66 +25,31 @@ export const F1Car = ({ className, animated = true, team = 'ferrari', size = 'md
   const currentSize = sizes[size];
   const color = teamColors[team];
 
+  const sizeClasses = {
+    'sm': 'w-6 h-4',
+    'md': 'w-8 h-5', 
+    'lg': 'w-12 h-8'
+  };
+
+  const teamFilters = {
+    'red-bull': 'brightness-0 saturate-100 invert-[0.15] sepia-[1] saturate-[5] hue-rotate-[220deg]',
+    'ferrari': 'brightness-0 saturate-100 invert-[0.15] sepia-[1] saturate-[5] hue-rotate-[360deg]',
+    'mercedes': 'brightness-0 saturate-100 invert-[0.4] sepia-[1] saturate-[3] hue-rotate-[160deg]',
+    'mclaren': 'brightness-0 saturate-100 invert-[0.4] sepia-[1] saturate-[5] hue-rotate-[25deg]'
+  };
+
   return (
     <div className={cn("relative inline-block", className)}>
-      <svg 
-        width={currentSize.width} 
-        height={currentSize.height} 
-        viewBox="0 0 48 30" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
+      <img 
+        src="/lovable-uploads/2eacf5ec-6c23-4330-a5a3-6f8035bb6e87.png"
+        alt="F1 Car"
         className={cn(
+          sizeClasses[size],
+          teamFilters[team],
           animated && "animate-race-enter",
-          "drop-shadow-lg"
+          "drop-shadow-lg object-contain"
         )}
-      >
-        {/* Main body */}
-        <path 
-          d="M8 12h32c2 0 4 1 4 3v4c0 2-2 3-4 3H8c-2 0-4-1-4-3v-4c0-2 2-3 4-3z" 
-          fill={color}
-          stroke="currentColor"
-          strokeWidth="0.5"
-        />
-        
-        {/* Front nose */}
-        <path 
-          d="M40 15h6c1 0 2 1 2 2v1c0 1-1 2-2 2h-6z" 
-          fill={color}
-          stroke="currentColor"
-          strokeWidth="0.5"
-        />
-        
-        {/* Rear wing */}
-        <path 
-          d="M2 14h6v2H2z" 
-          fill={color}
-          stroke="currentColor"
-          strokeWidth="0.5"
-        />
-        
-        {/* Front wheels */}
-        <circle cx="38" cy="12" r="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5"/>
-        <circle cx="38" cy="18" r="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5"/>
-        
-        {/* Rear wheels */}
-        <circle cx="10" cy="12" r="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5"/>
-        <circle cx="10" cy="18" r="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5"/>
-        
-        {/* Cockpit */}
-        <path 
-          d="M16 13h16c1 0 2 0.5 2 1.5v1c0 1-1 1.5-2 1.5H16c-1 0-2-0.5-2-1.5v-1c0-1 1-1.5 2-1.5z" 
-          fill="#374151"
-          stroke="#4b5563"
-          strokeWidth="0.5"
-        />
-        
-        {/* Side details */}
-        <rect x="20" y="14" width="8" height="2" fill="#6b7280" rx="0.5"/>
-        
-        {/* Front wing elements */}
-        <rect x="42" y="13" width="4" height="1" fill={color} opacity="0.8"/>
-        <rect x="42" y="16" width="4" height="1" fill={color} opacity="0.8"/>
-      </svg>
+      />
       
       {/* Speed lines */}
       {animated && (
