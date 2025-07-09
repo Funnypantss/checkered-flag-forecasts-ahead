@@ -10,22 +10,6 @@ interface F1CarProps {
 }
 
 export const F1Car = ({ className, animated = true, team = 'ferrari', size = 'md' }: F1CarProps) => {
-  const teamColors = {
-    'red-bull': '#1e3a8a', // blue-800
-    'ferrari': '#dc2626', // red-600
-    'mercedes': '#0d9488', // teal-600
-    'mclaren': '#ea580c'   // orange-600
-  };
-
-  const sizes = {
-    'sm': { width: 24, height: 16 },
-    'md': { width: 32, height: 20 },
-    'lg': { width: 48, height: 30 }
-  };
-
-  const currentSize = sizes[size];
-  const color = teamColors[team];
-
   const sizeClasses = {
     'sm': 'w-6 h-4',
     'md': 'w-8 h-5', 
@@ -33,10 +17,10 @@ export const F1Car = ({ className, animated = true, team = 'ferrari', size = 'md
   };
 
   const teamFilters = {
-    'red-bull': 'brightness-0 saturate-100 invert-[0.15] sepia-[1] saturate-[5] hue-rotate-[220deg]',
-    'ferrari': 'brightness-0 saturate-100 invert-[0.15] sepia-[1] saturate-[5] hue-rotate-[360deg]',
-    'mercedes': 'brightness-0 saturate-100 invert-[0.4] sepia-[1] saturate-[3] hue-rotate-[160deg]',
-    'mclaren': 'brightness-0 saturate-100 invert-[0.4] sepia-[1] saturate-[5] hue-rotate-[25deg]'
+    'red-bull': 'hue-rotate-[220deg] saturate-150 brightness-90',
+    'ferrari': 'hue-rotate-[360deg] saturate-150 brightness-90',
+    'mercedes': 'hue-rotate-[160deg] saturate-150 brightness-90',
+    'mclaren': 'hue-rotate-[25deg] saturate-150 brightness-90'
   };
 
   return (
