@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import f1CarLogo from "@/assets/f1-car-logo.png";
 
 interface F1CarProps {
   className?: string;
@@ -41,7 +42,7 @@ export const F1Car = ({ className, animated = true, team = 'ferrari', size = 'md
   return (
     <div className={cn("relative inline-block", className)}>
       <img 
-        src="/lovable-uploads/2eacf5ec-6c23-4330-a5a3-6f8035bb6e87.png"
+        src={f1CarLogo}
         alt="F1 Car"
         className={cn(
           sizeClasses[size],
